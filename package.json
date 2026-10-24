@@ -1,0 +1,32 @@
+{
+  "name": "vaish-and-co",
+  "version": "1.0.0",
+  "description": "Vaish&Co. - Little things, lovely finds.",
+  "private": true,
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "concurrently \"npm run dev --workspace=apps/api\" \"npm run dev --workspace=apps/web\"",
+    "dev:api": "npm run dev --workspace=apps/api",
+    "dev:web": "npm run dev --workspace=apps/web",
+    "db:start": "node scripts/start-db.js",
+    "build": "npm run build --workspace=packages/shared && npm run build --workspace=apps/api && npm run build --workspace=apps/web",
+    "db:migrate": "npm run db:migrate --workspace=apps/api",
+    "db:seed": "npm run db:seed --workspace=apps/api",
+    "db:generate": "npm run db:generate --workspace=apps/api",
+    "db:studio": "npm run db:studio --workspace=apps/api",
+    "test": "npm run test --workspace=apps/api && npm run test --workspace=apps/web",
+    "lint": "npm run lint --workspace=apps/api && npm run lint --workspace=apps/web",
+    "format": "prettier --write \"**/*.{ts,tsx,json,md}\" --ignore-path .gitignore"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2",
+    "embedded-postgres": "^18.4.0-beta.17",
+    "prettier": "^3.3.3"
+  },
+  "dependencies": {
+    "dotenv": "^18.0.9"
+  }
+}

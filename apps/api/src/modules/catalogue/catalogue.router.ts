@@ -12,15 +12,19 @@ const productQuerySchema = z.object({
   minPrice: z.coerce.number().min(0).optional(),
   maxPrice: z.coerce.number().min(0).optional(),
   minRating: z.coerce.number().min(0).max(5).optional(),
-  delivery: z.nativeEnum(DeliveryMode).optional(),
+  delivery: z.string().optional(),
+  deliveryMode: z.string().optional(),
   tags: z.string().optional(),
   newArrival: z.coerce.boolean().optional(),
   bestseller: z.coerce.boolean().optional(),
+  isBestseller: z.coerce.boolean().optional(),
   featured: z.coerce.boolean().optional(),
+  isFeatured: z.coerce.boolean().optional(),
   onSale: z.coerce.boolean().optional(),
+  sale: z.coerce.boolean().optional(),
   inStock: z.coerce.boolean().optional(),
   search: z.string().max(200).optional(),
-  sortBy: z.enum(['relevance', 'price_asc', 'price_desc', 'rating', 'reviews', 'newest', 'bestselling', 'discount']).optional(),
+  sortBy: z.string().optional(),
   page: z.coerce.number().min(1).default(1),
   limit: z.coerce.number().min(1).max(50).default(24),
 });
@@ -42,21 +46,33 @@ router.get('/brands', asyncHandler(async (_req: Request, res: Response) => {
 
 router.get('/products', asyncHandler(async (req: Request, res: Response) => {
   const query = productQuerySchema.parse(req.query);
+
+  // Normalize sortBy
+  let sortBy = query.sortBy;
+  if (sortBy === 'featured') sortBy = 'relevance';
+  if (sortBy === 'price-asc') sortBy = 'price_asc';
+  if (sortBy === 'price-desc') sortBy = 'price_desc';
+
+  const deliveryModeRaw = query.delivery || query.deliveryMode;
+  const deliveryMode = ['QUICK', 'FAST', 'STANDARD'].includes(deliveryModeRaw as any)
+    ? (deliveryModeRaw as DeliveryMode)
+    : undefined;
+
   const result = await catalogueService.getProducts({
     categorySlug: query.category,
     brandId: query.brand,
     minPrice: query.minPrice,
     maxPrice: query.maxPrice,
     minRating: query.minRating,
-    deliveryMode: query.delivery,
+    deliveryMode,
     tags: query.tags ? query.tags.split(',') : undefined,
     isNewArrival: query.newArrival,
-    isBestseller: query.bestseller,
-    isFeatured: query.featured,
-    onSale: query.onSale,
+    isBestseller: query.bestseller || query.isBestseller,
+    isFeatured: query.featured || query.isFeatured,
+    onSale: query.onSale || query.sale,
     inStock: query.inStock,
     search: query.search,
-    sortBy: query.sortBy,
+    sortBy,
     page: query.page,
     limit: query.limit,
   });

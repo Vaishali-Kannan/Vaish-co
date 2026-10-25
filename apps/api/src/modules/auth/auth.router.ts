@@ -103,6 +103,34 @@ router.post('/login', authLimiter, asyncHandler(async (req: Request, res: Respon
   });
 }));
 
+const googleSchema = z.object({
+  email: z.string().email(),
+  name: z.string().optional(),
+  avatar: z.string().optional(),
+});
+
+router.post('/google', asyncHandler(async (req: Request, res: Response) => {
+  const { email, name, avatar } = googleSchema.parse(req.body);
+
+  const result = await authService.googleLoginUser(
+    email,
+    name,
+    avatar,
+    req.headers['user-agent'],
+    req.ip
+  );
+
+  setCookies(res, result.accessToken, result.refreshToken);
+
+  res.json({
+    success: true,
+    data: {
+      user: result.user,
+      accessToken: result.accessToken,
+    },
+  });
+}));
+
 /**
  * @swagger
  * /auth/logout:

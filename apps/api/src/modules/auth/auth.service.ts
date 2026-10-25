@@ -262,3 +262,81 @@ export async function bootstrapAdmin(secret: string, data: {
   logger.info('Admin user bootstrapped', { userId: admin.id });
   return admin;
 }
+
+export async function googleLoginUser(
+  email: string,
+  name?: string,
+  avatar?: string,
+  userAgent?: string,
+  ipAddress?: string
+) {
+  let user = await prisma.user.findUnique({
+    where: { email: email.toLowerCase() },
+  });
+
+  if (!user) {
+    const randomPassword = crypto.randomBytes(32).toString('hex');
+    const passwordHash = await bcrypt.hash(randomPassword, BCRYPT_ROUNDS);
+
+    user = await prisma.$transaction(async (tx) => {
+      const newUser = await tx.user.create({
+        data: {
+          email: email.toLowerCase(),
+          name: name || email.split('@')[0],
+          passwordHash,
+          role: Role.CUSTOMER,
+          emailVerified: true,
+          avatarUrl: avatar || null,
+        },
+      });
+
+      await tx.rewardAccount.create({
+        data: { userId: newUser.id, balance: 50 },
+      });
+
+      await tx.cart.create({
+        data: { userId: newUser.id },
+      });
+
+      return newUser;
+    });
+  }
+
+  const { accessToken: tempToken, refreshToken } = generateTokens(user.id, '');
+  const expiry = getSessionExpiry();
+
+  const session = await prisma.session.create({
+    data: {
+      userId: user.id,
+      token: tempToken,
+      refreshToken,
+      userAgent,
+      ipAddress,
+      expiresAt: expiry,
+    },
+  });
+
+  const { accessToken: finalAccessToken } = generateTokens(user.id, session.id);
+  await prisma.session.update({
+    where: { id: session.id },
+    data: { token: finalAccessToken },
+  });
+
+  const reward = await prisma.rewardAccount.findUnique({ where: { userId: user.id } });
+
+  logger.info('User logged in via Google SSO', { userId: user.id, email: user.email });
+
+  return {
+    accessToken: finalAccessToken,
+    refreshToken,
+    user: {
+      id: user.id,
+      email: user.email,
+      name: user.name,
+      fullName: user.name,
+      role: user.role,
+      emailVerified: user.emailVerified,
+      coinsBalance: reward?.balance || 50,
+    },
+  };
+}

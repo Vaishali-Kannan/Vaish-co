@@ -8,6 +8,7 @@ interface AuthContextType {
   addresses: Address[];
   login: (email: string, pass: string) => Promise<void>;
   register: (data: { email: string; password: string; fullName: string; phone?: string }) => Promise<void>;
+  loginWithGoogle: (googleData: { email: string; name?: string; avatar?: string }) => Promise<void>;
   logout: () => void;
   refreshUser: () => Promise<void>;
   refreshAddresses: () => Promise<void>;
@@ -15,6 +16,19 @@ interface AuthContextType {
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
+
+const normalizeUser = (u: any): User | null => {
+  if (!u) return null;
+  return {
+    id: u.id,
+    email: u.email,
+    fullName: u.fullName || u.name || (u.email ? u.email.split('@')[0] : 'Shopper'),
+    phone: u.phone,
+    role: u.role || 'CUSTOMER',
+    isEmailVerified: u.isEmailVerified ?? u.emailVerified ?? true,
+    coinsBalance: u.coinsBalance ?? u.rewardAccount?.balance ?? 50,
+  };
+};
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
@@ -31,7 +45,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
       const res = await api.getCurrentUser();
       if (res.success && res.user) {
-        setUser(res.user);
+        setUser(normalizeUser(res.user));
       } else {
         setUser(null);
       }
@@ -72,7 +86,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     if (res.token) {
       localStorage.setItem('vaish_token', res.token);
     }
-    setUser(res.user);
+    setUser(normalizeUser(res.user));
   };
 
   const register = async (data: { email: string; password: string; fullName: string; phone?: string }) => {
@@ -80,7 +94,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     if (res.token) {
       localStorage.setItem('vaish_token', res.token);
     }
-    setUser(res.user);
+    setUser(normalizeUser(res.user));
+  };
+
+  const loginWithGoogle = async (googleData: { email: string; name?: string; avatar?: string }) => {
+    const res = await api.loginWithGoogle(googleData);
+    if (res.token) {
+      localStorage.setItem('vaish_token', res.token);
+    }
+    setUser(normalizeUser(res.user));
   };
 
   const logout = () => {
@@ -103,6 +125,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         addresses,
         login,
         register,
+        loginWithGoogle,
         logout,
         refreshUser,
         refreshAddresses,

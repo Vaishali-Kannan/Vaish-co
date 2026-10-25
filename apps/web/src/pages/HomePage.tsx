@@ -33,17 +33,28 @@ export const HomePage: React.FC = () => {
     const fetchData = async () => {
       try {
         setIsLoading(true);
-        const [catsRes, trendingRes, quickRes, bestsellersRes] = await Promise.all([
+        const [catsRes, allProdsRes, quickRes, bestsellersRes] = await Promise.all([
           api.getCategories(),
-          api.getProducts({ isFeatured: true, limit: 8 }),
-          api.getProducts({ deliveryMode: 'QUICK', limit: 4 }),
+          api.getProducts({ limit: 12 }),
+          api.getProducts({ delivery: 'QUICK', limit: 6 }),
           api.getProducts({ sortBy: 'bestselling', limit: 8 }),
         ]);
 
         if (catsRes.success) setCategories(catsRes.categories || []);
-        if (trendingRes.success) setTrendingProducts(trendingRes.products || []);
-        if (quickRes.success) setQuickDeliveryProducts(quickRes.products || []);
-        if (bestsellersRes.success) setBestsellers(bestsellersRes.products || []);
+        if (allProdsRes.success) {
+          const prods = allProdsRes.products || [];
+          setTrendingProducts(prods.slice(0, 8));
+        }
+        if (quickRes.success && quickRes.products && quickRes.products.length > 0) {
+          setQuickDeliveryProducts(quickRes.products);
+        } else if (allProdsRes.success) {
+          setQuickDeliveryProducts(allProdsRes.products.slice(0, 4));
+        }
+        if (bestsellersRes.success && bestsellersRes.products && bestsellersRes.products.length > 0) {
+          setBestsellers(bestsellersRes.products);
+        } else if (allProdsRes.success) {
+          setBestsellers(allProdsRes.products.slice(4, 12));
+        }
       } catch (err) {
         console.error('Failed to load homepage data:', err);
       } finally {

@@ -103,7 +103,7 @@ export const api = {
       body: JSON.stringify(formData),
     });
     const user = res.data?.user || res.user;
-    const token = res.data?.tokens?.accessToken || res.token || res.accessToken;
+    const token = res.data?.accessToken || res.data?.tokens?.accessToken || res.token || res.accessToken;
     return { success: true, user, token };
   },
 
@@ -113,7 +113,17 @@ export const api = {
       body: JSON.stringify(credentials),
     });
     const user = res.data?.user || res.user;
-    const token = res.data?.tokens?.accessToken || res.token || res.accessToken;
+    const token = res.data?.accessToken || res.data?.tokens?.accessToken || res.token || res.accessToken;
+    return { success: true, user, token };
+  },
+
+  loginWithGoogle: async (googleData: { email: string; name?: string; avatar?: string }) => {
+    const res = await request<any>('/auth/google', {
+      method: 'POST',
+      body: JSON.stringify(googleData),
+    });
+    const user = res.data?.user || res.user;
+    const token = res.data?.accessToken || res.data?.tokens?.accessToken || res.token || res.accessToken;
     return { success: true, user, token };
   },
 

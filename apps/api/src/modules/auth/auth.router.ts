@@ -8,7 +8,7 @@ import env from '../../config/env';
 
 const router = Router();
 
-const authLimiter = rateLimit({
+const authLimiter: any = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 min
   max: 10,
   message: { success: false, error: { code: 'RATE_LIMITED', message: 'Too many attempts. Please wait.' } },

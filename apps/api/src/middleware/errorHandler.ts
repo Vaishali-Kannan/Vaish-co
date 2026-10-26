@@ -77,7 +77,7 @@ export const errorHandler = (
       error: {
         code: err.constructor.name.replace('Error', '').toUpperCase(),
         message: err.message,
-        ...(err.details && { details: err.details }),
+        ...(err.details ? { details: err.details } : {}),
       },
     });
     return;

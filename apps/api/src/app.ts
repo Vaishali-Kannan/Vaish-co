@@ -46,7 +46,7 @@ app.use(cors({
 }));
 
 // Global rate limiter
-const globalLimiter = rateLimit({
+const globalLimiter: any = rateLimit({
   windowMs: env.RATE_LIMIT_WINDOW_MS,
   max: env.RATE_LIMIT_MAX,
   standardHeaders: true,
@@ -56,8 +56,8 @@ app.use('/api', globalLimiter);
 
 // ─── Request Parsing ───────────────────────────────────────────────────────
 
-app.use(compression());
-app.use(cookieParser());
+app.use(compression() as any);
+app.use(cookieParser() as any);
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
@@ -121,7 +121,7 @@ const swaggerOptions = {
 };
 
 const swaggerSpec = swaggerJsdoc(swaggerOptions);
-app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+app.use('/api-docs', ...(swaggerUi.serve as any), swaggerUi.setup(swaggerSpec) as any);
 
 // ─── Health Check ─────────────────────────────────────────────────────────
 

@@ -173,7 +173,7 @@ export async function createOrder(userId: string, data: {
         paymentMethod: data.paymentMethod,
         couponCode: data.couponCode,
         notes: data.notes,
-        addressSnapshot: address ? { ...address } : null,
+        addressSnapshot: address ? (JSON.parse(JSON.stringify(address))) : Prisma.JsonNull,
         items: {
           create: quote.lineItems.map((item) => ({
             productId: item.productId,
@@ -292,7 +292,7 @@ export async function getOrderById(orderId: string, userId: string) {
   return order;
 }
 
-const CANCELLABLE_STATUSES = [OrderStatus.PENDING_PAYMENT, OrderStatus.CONFIRMED, OrderStatus.PROCESSING];
+const CANCELLABLE_STATUSES: OrderStatus[] = [OrderStatus.PENDING_PAYMENT, OrderStatus.CONFIRMED, OrderStatus.PROCESSING];
 
 export async function cancelOrder(orderId: string, userId: string) {
   const order = await prisma.order.findUnique({

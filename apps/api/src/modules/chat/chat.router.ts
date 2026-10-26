@@ -8,7 +8,7 @@ import { asyncHandler } from '../../middleware/errorHandler';
 const router = Router();
 router.use(optionalAuthenticate);
 
-const chatLimiter = rateLimit({
+const chatLimiter: any = rateLimit({
   windowMs: 60 * 1000, // 1 min
   max: 20,
   message: { success: false, error: { code: 'RATE_LIMITED', message: 'Too many messages. Please wait.' } },

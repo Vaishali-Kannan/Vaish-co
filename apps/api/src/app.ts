@@ -8,6 +8,7 @@ import rateLimit from 'express-rate-limit';
 import swaggerUi from 'swagger-ui-express';
 import swaggerJsdoc from 'swagger-jsdoc';
 import path from 'path';
+import fs from 'fs';
 
 import env from './config/env';
 import logger from './utils/logger';
@@ -134,14 +135,30 @@ app.get('/health', (_req, res) => {
   });
 });
 
-app.get('/', (_req, res) => {
-  res.json({
-    name: 'Vaish&Co. API',
-    version: '1.0.0',
-    docs: '/api-docs',
-    health: '/health',
+// ─── Static Frontend Serving (Single Service Deployment) ──────────────────
+
+const webDistPath = fs.existsSync(path.resolve(process.cwd(), 'apps/web/dist'))
+  ? path.resolve(process.cwd(), 'apps/web/dist')
+  : path.resolve(__dirname, '../../../apps/web/dist');
+
+if (fs.existsSync(webDistPath)) {
+  app.use(express.static(webDistPath));
+  app.get('*', (req, res, next) => {
+    if (req.path.startsWith('/api') || req.path.startsWith('/health') || req.path.startsWith('/api-docs')) {
+      return next();
+    }
+    res.sendFile(path.join(webDistPath, 'index.html'));
   });
-});
+} else {
+  app.get('/', (_req, res) => {
+    res.json({
+      name: 'Vaish&Co. API',
+      version: '1.0.0',
+      docs: '/api-docs',
+      health: '/health',
+    });
+  });
+}
 
 // 404 handler
 app.use((_req, res) => {

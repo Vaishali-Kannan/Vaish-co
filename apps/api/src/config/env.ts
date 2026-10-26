@@ -5,7 +5,7 @@ dotenv.config({ path: path.resolve(__dirname, '../../.env') });
 
 const env = {
   NODE_ENV: process.env.NODE_ENV || 'development',
-  PORT: parseInt(process.env.API_PORT || '3001', 10),
+  PORT: parseInt(process.env.PORT || process.env.API_PORT || '3001', 10),
   DATABASE_URL: process.env.DATABASE_URL || '',
   FRONTEND_URL: process.env.FRONTEND_URL || 'http://localhost:5173',
 
